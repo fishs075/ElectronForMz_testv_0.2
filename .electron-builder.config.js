@@ -12,7 +12,20 @@
  [GitHub] : https://github.com/triacontane/
 =============================================================================*/
 
+const fs = require('fs');
+const path = require('path');
+
+// ゲームタイトルを取得する関数
+function getGameTitle() {
+    const indexPath = path.join(__dirname, 'project/index.html');
+    const htmlContent = fs.readFileSync(indexPath, 'utf8');
+    const titleMatch = htmlContent.match(/<title>(.*?)<\/title>/);
+    return titleMatch ? titleMatch[1].trim() : 'Untitled';
+}
+
 module.exports = async function () {
+    const gameTitle = getGameTitle();
+
     return {
         appId: 'com.rpgmaker.game',
         asar: true,
@@ -23,17 +36,20 @@ module.exports = async function () {
 
         win: {
             target: 'zip',
-            icon: 'project/icon/icon-electron.png'
+            icon: 'project/icon/icon-electron.png',
+            artifactName: `${gameTitle}.zip`
         },
         mac: {
             target: 'dmg',
             category: 'Games',
-            icon: 'project/icon/icon-electron-mac.png'
+            icon: 'project/icon/icon-electron-mac.png',
+            artifactName: `${gameTitle}.dmg`
         },
         linux: {
             target: 'AppImage',
             category: 'Game',
-            icon: 'project/icon/icon-electron.png'
+            icon: 'project/icon/icon-electron.png',
+            artifactName: `${gameTitle}.AppImage`
         }
     };
 };
