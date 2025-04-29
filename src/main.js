@@ -23,13 +23,35 @@ let mainWindow = null;
     const project = require('../project/package.json').window;
     const isMac = process.platform === 'darwin';
 
+    // ゲームタイトルを取得する関数
+    async function getGameTitle() {
+        const fs = require('fs');
+        const path = require('path');
+        const indexPath = path.join(app.getAppPath(), 'project/index.html');
+        const htmlContent = fs.readFileSync(indexPath, 'utf8');
+        const titleMatch = htmlContent.match(/<title>(.*?)<\/title>/);
+        return titleMatch ? titleMatch[1].trim() : 'Untitled';
+    }
+
     /**
      * This code ensures that the window creation process occurs once the Electron app
      * is fully initialized and ready to handle windows and events.
      */
     app.whenReady()
-        .then(restoreOrCreateWindow) // Call the restoreOrCreateWindow function to create or restore the window.
-        .catch(e => console.error('Failed to create window:', e)); // Handle any errors that may occur during window creation.
+        .then(async () => {
+            // ゲームタイトルを取得してユーザーデータフォルダを設定
+            const gameTitle = await getGameTitle();
+            app.setPath('userData', join(app.getPath('appData'), 'electron-for-mz', gameTitle));
+
+            // package.jsonにゲームタイトルを保存
+            const packageJsonPath = join(app.getAppPath(), 'package.json');
+            const packageJson = require(packageJsonPath);
+            packageJson.gameTitle = gameTitle;
+            require('fs').writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+
+            return restoreOrCreateWindow();
+        })
+        .catch(e => console.error('Failed to create window:', e));
 
     /**
      * Asynchronous function to create the application's main window.
